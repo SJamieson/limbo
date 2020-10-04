@@ -43,17 +43,42 @@
 //| The fact that you are presently reading this means that you have had
 //| knowledge of the CeCILL-C license and that you accept its terms.
 //|
-#ifndef LIMBO_INIT_HPP
-#define LIMBO_INIT_HPP
+#ifndef LIMBO_INIT_PARALLEL_SAMPLING_HPP
+#define LIMBO_INIT_PARALLEL_SAMPLING_HPP
 
-///@defgroup init
-///@defgroup init_defaults
+#include <Eigen/Core>
 
-#include <limbo/init/grid_sampling.hpp>
-#include <limbo/init/lhs.hpp>
-#include <limbo/init/no_init.hpp>
-#include <limbo/init/random_sampling.hpp>
-#include <limbo/init/random_sampling_grid.hpp>
-#include <limbo/init/parallel_sampling.hpp>
+#include <limbo/tools/macros.hpp>
+#include <limbo/tools/random_generator.hpp>
+
+namespace limbo {
+    namespace defaults {
+        struct init_parallelsampling {
+            ///@ingroup init_defaults
+            BO_PARAM(int, samples, 10);
+        };
+    }
+    namespace init {
+        /** @ingroup init
+          \rst
+          Parallel random sampling in [0, 1]^n
+
+          Parameters:
+            - ``int samples`` (total number of samples)
+          \endrst
+        */
+        template <typename Params>
+        struct ParallelSampling {
+            template <typename StateFunction, typename AggregatorFunction, typename Opt>
+            void operator()(const StateFunction& seval, const AggregatorFunction&, Opt& opt) const
+            {
+                limbo::tools::par::loop(0, Params::init_parallelsampling::samples(), [](size_t i){
+                  auto new_sample = tools::random_vector(StateFunction::dim_in(), Params::bayes_opt_bobase::bounded());
+                  opt.eval_and_add(seval, new_sample);
+                });
+            }
+        };
+    }
+}
 
 #endif
