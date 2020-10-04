@@ -56,6 +56,7 @@ namespace limbo {
         struct init_parallelsampling {
             ///@ingroup init_defaults
             BO_PARAM(int, samples, 10);
+            BO_PARAM(int, num_threads, 1);
         };
     }
     namespace init {
@@ -72,7 +73,8 @@ namespace limbo {
             template <typename StateFunction, typename AggregatorFunction, typename Opt>
             void operator()(const StateFunction& seval, const AggregatorFunction&, Opt& opt) const
             {
-                limbo::tools::par::loop(0, Params::init_parallelsampling::samples(), [](size_t i){
+                omp_set_num_threads(Params::init_parallelsampling::num_threads());
+                limbo::tools::par::loop(0, Params::init_parallelsampling::samples(), [&seval, &opt](size_t i){
                   auto new_sample = tools::random_vector(StateFunction::dim_in(), Params::bayes_opt_bobase::bounded());
                   opt.eval_and_add(seval, new_sample);
                 });

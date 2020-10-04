@@ -59,6 +59,8 @@
 #include <tbb/parallel_reduce.h>
 #include <tbb/parallel_sort.h>
 #include <tbb/task_scheduler_init.h>
+#else
+#include <omp.h>
 #endif
 
 ///@defgroup par_tools
@@ -131,6 +133,7 @@ namespace limbo {
                     // clang-format on
                 });
 #else
+                #pragma omp parallel for
                 for (size_t i = begin; i < end; ++i)
                     f(i);
 #endif
